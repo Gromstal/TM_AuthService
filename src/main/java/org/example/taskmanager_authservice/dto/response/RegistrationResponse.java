@@ -1,8 +1,10 @@
 package org.example.taskmanager_authservice.dto.response;
 
-import lombok.Data;
+
+import lombok.*;
 
 @Data
+@NoArgsConstructor
 public class RegistrationResponse {
 
     private String message;
