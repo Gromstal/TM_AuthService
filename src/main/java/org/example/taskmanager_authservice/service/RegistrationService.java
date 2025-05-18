@@ -25,11 +25,10 @@ public class RegistrationService {
                 })
                 .orElseGet(() -> {
                     User newUser = userService.createUser(request);
-                    userRepository.save(newUser);
                     String verificationMailToken = tokenService.saveVerificationMailToken(request.getEmail());
-                    emailService.sendVerificationEmail(request.getEmail(), verificationMailToken);
-
-                    return new RegistrationResponse("Registration successful. Please check your email to verify your account.");
+                    RegistrationResponse response= emailService.sendVerificationEmail(request.getEmail(), verificationMailToken);
+                    userRepository.save(newUser);
+                    return response;
                 });
     }
 
@@ -41,6 +40,7 @@ public class RegistrationService {
 
                     if (tokenService.isMailTokenValid(token, t.getEmail())) {
                         tokenService.setVerificationMailTokenIsUsed(t.getEmail());
+                        userRepository.setIsVerified(t.getEmail());
                         return new RegistrationResponse("Verification is confirmed. Now you can login");
                     }
                     return new RegistrationResponse("Verification mail token expired");

@@ -1,12 +1,11 @@
 package org.example.taskmanager_authservice.service;
 
-import org.example.taskmanager_authservice.dto.request.VerificationTokenRequest;
+
 import org.example.taskmanager_authservice.dto.request.RegistrationRequest;
 import org.example.taskmanager_authservice.dto.response.RegistrationResponse;
 import org.example.taskmanager_authservice.entity.User;
 import org.example.taskmanager_authservice.entity.VerificationMailToken;
 import org.example.taskmanager_authservice.repository.UserRepository;
-import org.example.taskmanager_authservice.repository.VerificationMailTokenRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -56,6 +55,7 @@ class RegistrationServiceTest {
                 .thenReturn(Optional.empty());
         when(userService.createUser(request)).thenReturn(new User());
         when(tokenService.saveVerificationMailToken(request.getEmail())).thenReturn("token");
+        when(emailService.sendVerificationEmail(request.getEmail(), "token")).thenReturn(new RegistrationResponse("Registration successful. Please check your email to verify your account."));
 
         RegistrationResponse expectedResponse = new RegistrationResponse("Registration successful. Please check your email to verify your account.");
         RegistrationResponse actualResponse = registrationService.startRegistration(request);

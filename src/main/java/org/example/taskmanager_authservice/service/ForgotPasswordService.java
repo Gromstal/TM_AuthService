@@ -1,10 +1,11 @@
 package org.example.taskmanager_authservice.service;
 
-import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.example.taskmanager_authservice.dto.request.ForgotPasswordRequest;
 import org.example.taskmanager_authservice.dto.request.NewPasswordRequest;
 import org.example.taskmanager_authservice.dto.response.ForgotPasswordResponse;
+import org.example.taskmanager_authservice.entity.User;
 import org.example.taskmanager_authservice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class ForgotPasswordService {
 
     public ForgotPasswordResponse getForgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         return userRepository.findByUsername(forgotPasswordRequest.getUsername())
+                .filter(User::isVerified)
                 .map(user -> {
                     String token = tokenService.savePasswordResetToken(user.getEmail());
                     emailService.sendVerificationEmail(user.getEmail(), token);

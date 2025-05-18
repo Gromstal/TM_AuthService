@@ -3,6 +3,7 @@ package org.example.taskmanager_authservice.service;
 import lombok.RequiredArgsConstructor;
 import org.example.taskmanager_authservice.client.EmailServiceClient;
 import org.example.taskmanager_authservice.dto.request.VerificationTokenRequest;
+import org.example.taskmanager_authservice.dto.response.RegistrationResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,15 +12,15 @@ public class EmailService {
 
     private final EmailServiceClient emailServiceClient;
 
-    public void sendVerificationEmail(String email, String token) {
+    public RegistrationResponse sendVerificationEmail(String email, String token) {
         try {
             VerificationTokenRequest request = VerificationTokenRequest.builder()
                     .email(email)
                     .token(token)
                     .build();
-            emailServiceClient.sendRegistrationEmail(request);
+          return  emailServiceClient.sendRegistrationEmail(request);
         } catch (Exception ex) {
-            //TODO добавить логирование
+            ex.printStackTrace();
             throw new RuntimeException("Email sending failed");
         }
     }

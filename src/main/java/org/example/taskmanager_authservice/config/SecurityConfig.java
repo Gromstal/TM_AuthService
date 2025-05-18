@@ -48,7 +48,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->authorizeRequests
-                                .requestMatchers("/login","/register").permitAll()   // TODO надо додумать про забыл пароль и т.д
+                                .requestMatchers("/login","/api/v1/registration").permitAll()
                         .anyRequest().authenticated() // TODO надо продумать момент с доступом к ресурсм с разными ролями
                         )
                 //.formLogin() ?? // TODO продумать где будет проходиь аутентификация...т.е форма
