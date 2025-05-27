@@ -78,7 +78,7 @@ public class JwtService {
     public boolean isAccessTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractSubject(token);
-            return (username.equals(userDetails.getUsername()) && !isAccessTokenExpired(token));
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (JwtException e) {
             return false;
         }
@@ -88,7 +88,17 @@ public class JwtService {
     public boolean isMailTokenValid(String token, String email) {
         try {
             final String tokenMail = extractSubject(token);
-            return (tokenMail.equals(email) && !isAccessTokenExpired(token));
+            return (tokenMail.equals(email) && !isTokenExpired(token));
+        } catch (JwtException e) {
+            return false;
+        }
+
+    }
+
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        try {
+            final String username = extractSubject(token);
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (JwtException e) {
             return false;
         }
@@ -117,7 +127,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private boolean isAccessTokenExpired(String token) {
+    private boolean isTokenExpired(String token) {
         return getClaims(token).getExpiration().before(new Date());
     }
 

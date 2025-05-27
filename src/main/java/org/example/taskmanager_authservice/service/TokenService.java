@@ -7,6 +7,7 @@ import org.example.taskmanager_authservice.entity.VerificationMailToken;
 import org.example.taskmanager_authservice.repository.PasswordResetTokenRepository;
 import org.example.taskmanager_authservice.repository.VerificationMailTokenRepository;
 import org.example.taskmanager_authservice.security.JwtService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -19,7 +20,7 @@ public class TokenService {
     private final VerificationMailTokenRepository verificationMailTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public String getEmailFromToken(String token) {
+    public String getSubjectFromToken(String token) {
         Claims claims = jwtService.getClaims(token);
         return claims.getSubject();
     }
@@ -67,4 +68,24 @@ public class TokenService {
     public void setPasswordResetTokenRepositoryIsUsed(String email) {
         passwordResetTokenRepository.updateIsUsed(email);
     }
+
+    public boolean isAccessTokenValid(String token, UserDetails userDetails) {
+        return jwtService.isAccessTokenValid(token, userDetails);
+    }
+
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        return jwtService.isRefreshTokenValid(token, userDetails);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return jwtService.generateRefreshToken(userDetails);
+    }
+
+    public String generateAccessToken(UserDetails userDetails) {
+        return jwtService.generateAccessToken(userDetails);
+    }
+
+
+
+
 }

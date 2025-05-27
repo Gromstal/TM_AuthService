@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.taskmanager_authservice.dto.request.RegistrationRequest;
 import org.example.taskmanager_authservice.entity.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,11 +17,15 @@ public class UserServiceImpl implements UserService {
                 .email(registrationRequest.getEmail())
                 .role("User")
                 .username(registrationRequest.getUsername())
-                .password(getNewPassword(registrationRequest.getPassword()))
+                .password(encodePassword(registrationRequest.getPassword()))
                 .build();
     }
 
-    public String getNewPassword(String password) {
+    public String encodePassword(String password) {
         return passwordEncoder.encode(password);
+    }
+
+    public boolean checkPassword(String oldPassword, String passwordFromDB) {
+        return passwordEncoder.matches(oldPassword, passwordFromDB);
     }
 }
