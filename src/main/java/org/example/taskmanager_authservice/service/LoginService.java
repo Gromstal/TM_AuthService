@@ -3,7 +3,6 @@ package org.example.taskmanager_authservice.service;
 import lombok.RequiredArgsConstructor;
 import org.example.taskmanager_authservice.dto.request.AuthenticationRequest;
 import org.example.taskmanager_authservice.dto.response.AuthenticationResponse;
-import org.example.taskmanager_authservice.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
