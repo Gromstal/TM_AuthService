@@ -3,6 +3,7 @@ package org.example.taskmanager_authservice.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.taskmanager_authservice.dto.request.RegistrationRequest;
+import org.example.taskmanager_authservice.dto.request.TokenRequest;
 import org.example.taskmanager_authservice.dto.response.RegistrationResponse;
 import org.example.taskmanager_authservice.service.RegistrationService;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<RegistrationResponse> confirm(@Valid @RequestBody String token) {
+    public ResponseEntity<RegistrationResponse> confirm(@Valid @RequestBody TokenRequest token) {
         RegistrationResponse registrationResponse = registrationService.confirmRegistration(token);
         return ResponseEntity.ok(registrationResponse);
     }

@@ -22,6 +22,7 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
     private final JwtFilter jwtFilter;
+    private final SecurityProperties securityProperties;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -48,10 +49,13 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->authorizeRequests
-                                .requestMatchers("/login","/api/v1/registration").permitAll()
+                                .requestMatchers(securityProperties.getPublicPaths().toArray(new String[0])).permitAll()
                         .anyRequest().authenticated() // TODO надо продумать момент с доступом к ресурсм с разными ролями
                         )
-                //.formLogin() ?? // TODO продумать где будет проходиь аутентификация...т.е форма
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                )
                 .sessionManagement(sessionManagement ->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

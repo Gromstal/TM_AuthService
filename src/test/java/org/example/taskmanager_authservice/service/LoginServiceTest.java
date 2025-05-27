@@ -3,7 +3,6 @@ package org.example.taskmanager_authservice.service;
 
 import org.example.taskmanager_authservice.dto.request.AuthenticationRequest;
 import org.example.taskmanager_authservice.dto.response.AuthenticationResponse;
-import org.example.taskmanager_authservice.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,14 +31,14 @@ class LoginServiceTest {
     private UserDetailsService userDetailsService;
 
     @Mock
-    private JwtService jwtService;
+    private TokenService tokenService;
 
     @InjectMocks
     private LoginService loginService;
 
     @BeforeEach
     void setUp() {
-        loginService = new LoginService(authenticationManager, jwtService, userDetailsService);
+        loginService = new LoginService(authenticationManager, tokenService, userDetailsService);
     }
 
     @Test
@@ -50,14 +49,14 @@ class LoginServiceTest {
                 getSuccessTestUserDetails().getUsername()))
                 .thenReturn(getSuccessTestUserDetails());
 
-        when(jwtService.generateAccessToken(getSuccessTestUserDetails())).thenReturn(expectedToken);
+        when(tokenService.generateAccessToken(getSuccessTestUserDetails())).thenReturn(expectedToken);
 
         AuthenticationResponse response = loginService.login(authenticationRequest(getSuccessTestUserDetails()));
 
         assertEquals(expectedToken, response.getAccessToken());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(userDetailsService).loadUserByUsername(getSuccessTestUserDetails().getUsername());
-        verify(jwtService).generateAccessToken(getSuccessTestUserDetails());
+        verify(tokenService).generateAccessToken(getSuccessTestUserDetails());
 
     }
 
@@ -81,7 +80,7 @@ class LoginServiceTest {
 
         assertThrows(BadCredentialsException.class, () -> loginService.login(authenticationRequest(getNegativeTestUserDetails())));
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verifyNoInteractions(userDetailsService, jwtService);
+        verifyNoInteractions(userDetailsService, tokenService);
 
     }
 

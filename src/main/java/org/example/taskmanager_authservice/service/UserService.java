@@ -5,5 +5,6 @@ import org.example.taskmanager_authservice.entity.User;
 
 public interface UserService {
     User createUser (RegistrationRequest registrationRequest);
-    String getNewPassword(String password);
+    String encodePassword(String password);
+    boolean checkPassword(String oldPassword, String passwordFromDB);
 }
