@@ -24,4 +24,4 @@ security:
   public-paths:
     - ${REGISTRATION_PATH:/api/v1/registration}
     - ${CONFIRM_PATH:/api/v1/registration/confirm}
-    - ${LOGIN_PATH:/login}
+    - ${LOGIN_PATH:/api/v1/login}

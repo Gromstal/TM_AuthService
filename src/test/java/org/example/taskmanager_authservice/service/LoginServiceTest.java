@@ -3,19 +3,24 @@ package org.example.taskmanager_authservice.service;
 
 import org.example.taskmanager_authservice.dto.request.AuthenticationRequest;
 import org.example.taskmanager_authservice.dto.response.AuthenticationResponse;
+import org.example.taskmanager_authservice.entity.User;
+import org.example.taskmanager_authservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,48 +38,93 @@ class LoginServiceTest {
     @Mock
     private TokenService tokenService;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private LoginService loginService;
 
     @BeforeEach
     void setUp() {
-        loginService = new LoginService(authenticationManager, tokenService, userDetailsService);
+        loginService = new LoginService(authenticationManager, tokenService, userDetailsService,userRepository);
     }
 
     @Test
     void checkSuccessLogin() {
-        String expectedToken = "jwt-token";
+        UserDetails userDetails = getSuccessTestUserDetails();
+        AuthenticationRequest request = authenticationRequest(userDetails);
+        String expectedAccessToken = "jwt-token";
+        String expectedRefreshToken = "refresh-token";
 
-        when(userDetailsService.loadUserByUsername(
-                getSuccessTestUserDetails().getUsername()))
-                .thenReturn(getSuccessTestUserDetails());
+        when(userRepository.findByUsername(userDetails.getUsername()))
+                .thenReturn(Optional.of(getUser()));
 
-        when(tokenService.generateAccessToken(getSuccessTestUserDetails())).thenReturn(expectedToken);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(mock(Authentication.class));
 
-        AuthenticationResponse response = loginService.login(authenticationRequest(getSuccessTestUserDetails()));
+        when(userDetailsService.loadUserByUsername(userDetails.getUsername()))
+                .thenReturn(userDetails);
 
-        assertEquals(expectedToken, response.getAccessToken());
+        when(tokenService.generateAccessToken(userDetails)).thenReturn(expectedAccessToken);
+        when(tokenService.generateRefreshToken(userDetails)).thenReturn(expectedRefreshToken);
+
+
+        AuthenticationResponse response = loginService.login(request);
+
+        assertEquals(expectedAccessToken, response.getAccessToken());
+        assertEquals(expectedRefreshToken, response.getRefreshToken());
+
+        verify(userRepository).findByUsername(userDetails.getUsername());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(userDetailsService).loadUserByUsername(getSuccessTestUserDetails().getUsername());
-        verify(tokenService).generateAccessToken(getSuccessTestUserDetails());
+        verify(userDetailsService).loadUserByUsername(userDetails.getUsername());
+        verify(tokenService).generateAccessToken(userDetails);
+        verify(tokenService).generateRefreshToken(userDetails);
 
     }
 
     @Test
+    void checkUnverifiedUser() {
+
+        AuthenticationRequest request = authenticationRequest(getSuccessTestUserDetails());
+
+        when(userRepository.findByUsername(getSuccessTestUserDetails().getUsername()))
+                .thenReturn(Optional.of(getUnverifiedUser()));
+
+
+        AccessDeniedException thrown = assertThrows(AccessDeniedException.class, () -> {
+            loginService.login(request);
+        });
+
+        assertEquals("User is not verified", thrown.getMessage());
+
+        verify(authenticationManager, never()).authenticate(any());
+        verifyNoInteractions(userDetailsService, tokenService);
+    }
+
+    @Test
     void checkUserNotFound() {
-        when(userDetailsService.loadUserByUsername(
-                getNegativeTestUserDetails().getUsername()))
-                .thenThrow(new UsernameNotFoundException("Username not found"));
+        AuthenticationRequest request = authenticationRequest(getNegativeTestUserDetails());
 
-        assertThrows(UsernameNotFoundException.class, () -> loginService.login(authenticationRequest(getNegativeTestUserDetails())));
+        when(userRepository.findByUsername(getNegativeTestUserDetails().getUsername()))
+                .thenReturn(Optional.empty());
 
-        verify(authenticationManager).authenticate(any());
-        verify(userDetailsService).loadUserByUsername(getNegativeTestUserDetails().getUsername());
+        assertThrows(UsernameNotFoundException.class, () -> loginService.login(request));
+
+        verify(userRepository).findByUsername(getNegativeTestUserDetails().getUsername());
+        verifyNoInteractions(authenticationManager, userDetailsService, tokenService);
 
     }
 
     @Test
     void checkWrongPassword() {
+
+        UserDetails userDetails = getSuccessTestUserDetails();
+
+        when(userRepository.findByUsername(userDetails.getUsername()))
+                .thenReturn(Optional.of(getUser()));
+
+        when(userRepository.findByUsername(userDetails.getUsername()))
+                .thenReturn(Optional.of(getUser()));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -86,17 +136,34 @@ class LoginServiceTest {
 
 
     private UserDetails getSuccessTestUserDetails() {
-        return User.withUsername("username")
+        return User.builder().
+                username("wrong_username")
                 .password("password")
-                .roles("USER")
+                .role("USER")
                 .build();
     }
 
     private UserDetails getNegativeTestUserDetails() {
-        return User.withUsername("wrong_username")
+        return User.builder().
+                username("wrong_username")
                 .password("wrong_password")
-                .roles("USER")
+                .role("USER")
                 .build();
+    }
+
+    private User getUser(){
+        User userEntity = new User();
+        userEntity.setUsername(getSuccessTestUserDetails().getUsername());
+        userEntity.setPassword(getSuccessTestUserDetails().getPassword());
+        userEntity.setVerified(true);
+        return userEntity;
+    }
+
+    private User getUnverifiedUser(){
+        User unverifiedUser = new User();
+        unverifiedUser.setUsername(getSuccessTestUserDetails().getUsername());
+        unverifiedUser.setVerified(false);
+        return unverifiedUser;
     }
 
     private AuthenticationRequest authenticationRequest(UserDetails user) {

@@ -52,10 +52,6 @@ public class SecurityConfig {
                                 .requestMatchers(securityProperties.getPublicPaths().toArray(new String[0])).permitAll()
                         .anyRequest().authenticated() // TODO надо продумать момент с доступом к ресурсм с разными ролями
                         )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
-                )
                 .sessionManagement(sessionManagement ->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
